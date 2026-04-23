@@ -78,7 +78,9 @@ jobs:
           restore-keys: composer-
 
       - name: Install dependencies
-        run: composer install --no-dev --prefer-dist --no-interaction --no-progress --ignore-platform-reqs
+        run: composer install --no-dev --no-scripts --prefer-dist --no-interaction --no-progress --ignore-platform-reqs
+        env:
+          APP_ENV: prod
 
       - name: PHP-CS-Fixer — Check code style
         run: |
