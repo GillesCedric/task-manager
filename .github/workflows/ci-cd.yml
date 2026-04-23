@@ -285,7 +285,7 @@ jobs:
           DATABASE_URL: "mysql://root:root@127.0.0.1:3306/task_manager_test?serverVersion=8.0&charset=utf8mb4"
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v6
         with:
           file: backend/coverage.xml
           flags: backend
