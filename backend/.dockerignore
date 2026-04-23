@@ -1,0 +1,45 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Dev tooling
+.editorconfig
+.php-cs-fixer.php
+phpunit.dist.xml
+phpstan.neon
+infection.json
+rector.php
+
+# Tests
+tests/
+coverage/
+
+# Dev docs
+README.md
+CHANGELOG.md
+CLAUDE.md
+docs/
+
+# Dev env files
+.env.dev
+.env.test
+.env.local
+docker-compose*.yml
+docker-compose*.yaml
+compose*.yml
+compose*.yaml
+
+# Build artifacts
+var/cache/
+var/log/
+
+# Sensitive files (never in image)
+config/jwt/*.pem
+
+# Node (shouldn't be here but just in case)
+node_modules/

@@ -1,0 +1,103 @@
+name: 🔒 Scheduled Security Scans
+
+on:
+  schedule:
+    # Tous les jours à 02h00 UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  # ─── Scan GHCR images en production ─────────────────────────────────────────
+  scan-production-images:
+    name: Trivy — Production Images
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        image:
+          - ghcr.io/${{ github.repository_owner }}/task-manager-backend:latest
+          - ghcr.io/${{ github.repository_owner }}/task-manager-frontend:latest
+
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trivy full scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref:      ${{ matrix.image }}
+          format:         sarif
+          output:         trivy.sarif
+          severity:       CRITICAL,HIGH,MEDIUM
+          ignore-unfixed: false
+
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy.sarif
+
+  # ─── Dependency audit complet ────────────────────────────────────────────────
+  audit-deps:
+    name: Dependency Vulnerability Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+
+      - name: Composer audit
+        working-directory: backend
+        run: composer install --no-dev --no-interaction && composer audit
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: npm audit (high+)
+        working-directory: frontend
+        run: npm ci && npm audit --audit-level=high
+
+  # ─── SBOM Generation ─────────────────────────────────────────────────────────
+  sbom:
+    name: Generate SBOM
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Anchore — Generate SBOM (frontend)
+        uses: anchore/sbom-action@v0
+        with:
+          path: frontend/
+          format: spdx-json
+          output-file: sbom-frontend.spdx.json
+
+      - name: Anchore — Generate SBOM (backend)
+        uses: anchore/sbom-action@v0
+        with:
+          path: backend/
+          format: spdx-json
+          output-file: sbom-backend.spdx.json
+
+      - name: Upload SBOMs as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ github.run_id }}
+          path: |
+            sbom-frontend.spdx.json
+            sbom-backend.spdx.json
+          retention-days: 90

@@ -1,0 +1,25 @@
+framework:
+    cache:
+        # APCu en prod, filesystem en dev
+        app: cache.adapter.filesystem
+
+        pools:
+            task.cache_pool:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 300
+
+            doctrine.result_cache_pool:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 3600
+
+when@prod:
+    framework:
+        cache:
+            app: cache.adapter.apcu
+            pools:
+                task.cache_pool:
+                    adapter: cache.adapter.apcu
+                    default_lifetime: 300
+                doctrine.result_cache_pool:
+                    adapter: cache.adapter.apcu
+                    default_lifetime: 3600

@@ -1,0 +1,220 @@
+{
+  "app": {
+    "name": "Task Manager",
+    "tagline": "Gérez vos tâches efficacement"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "tasks": "Mes tâches",
+    "logout": "Déconnexion",
+    "admin": "Administration"
+  },
+  "auth": {
+    "login": "Connexion",
+    "register": "Inscription",
+    "email": "Adresse email",
+    "password": "Mot de passe",
+    "name": "Nom complet",
+    "loginButton": "Se connecter",
+    "registerButton": "Créer un compte",
+    "noAccount": "Pas encore de compte ?",
+    "hasAccount": "Déjà un compte ?",
+    "passwordHint": "Min. 8 caractères, 1 majuscule, 1 chiffre"
+  },
+  "task": {
+    "title": "Titre",
+    "description": "Description",
+    "dueDate": "Échéance",
+    "createdAt": "Créée le",
+    "updatedAt": "Modifiée le",
+    "overdue": "En retard",
+    "noDueDate": "Sans échéance",
+    "noDescription": "Aucune description.",
+    "titlePlaceholder": "Ex : Implémenter l'authentification",
+    "descriptionPlaceholder": "Description détaillée...",
+    "assignee": "Assigné à",
+    "unassigned": "— Non assigné —",
+    "drag": "Déplacer",
+    "taskCount_one": "{{count}} tâche",
+    "taskCount_other": "{{count}} tâches",
+    "status": {
+      "status": "Statut",
+      "todo": "À faire",
+      "in_progress": "En cours",
+      "done": "Terminé"
+    },
+    "priority": {
+      "priority": "Priorité",
+      "low": "Faible",
+      "medium": "Moyenne",
+      "high": "Haute",
+      "urgent": "Urgente"
+    }
+  },
+  "actions": {
+    "create": "Nouvelle tâche",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "refresh": "Rafraîchir",
+    "search": "Rechercher...",
+    "update": "Mettre à jour"
+  },
+  "filters": {
+    "all": "Toutes",
+    "status": "Statut",
+    "priority": "Priorité",
+    "sort": "Trier par",
+    "order": {
+      "ASC": "Croissant",
+      "DESC": "Décroissant"
+    },
+    "sorts": {
+      "createdAt": "Date de création",
+      "updatedAt": "Dernière modification",
+      "dueDate": "Échéance",
+      "priority": "Priorité",
+      "title": "Titre"
+    }
+  },
+  "pagination": {
+    "showing": "{{from}} - {{to}} sur {{total}}",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "perPage": "Par page"
+  },
+  "stats": {
+    "title": "Tableau de bord",
+    "total": "Total",
+    "todo": "À faire",
+    "inProgress": "En cours",
+    "done": "Terminées",
+    "overdue": "En retard",
+    "urgent": "Urgentes",
+    "completion": "Taux de complétion"
+  },
+  "messages": {
+    "taskCreated": "Tâche créée avec succès !",
+    "taskUpdated": "Tâche mise à jour !",
+    "taskDeleted": "Tâche supprimée.",
+    "confirmDelete": "Supprimer cette tâche définitivement ?",
+    "noTasks": "Aucune tâche pour le moment.",
+    "noTasksFiltered": "Aucune tâche ne correspond aux filtres.",
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue.",
+    "networkError": "Impossible de contacter le serveur.",
+    "profileUpdated": "Profil mis à jour !",
+    "avatarTooLarge": "Image trop volumineuse (max 1 Mo)",
+    "avatarUpdated": "Photo mise à jour !",
+    "avatarRemoved": "Photo supprimée.",
+    "passwordUpdated": "Mot de passe mis à jour !",
+    "listDeleted": "Liste supprimée.",
+    "listLeft": "Vous avez quitté la liste.",
+    "inviteLinkGenerated": "Lien généré !",
+    "inviteLinkRevoked": "Lien révoqué.",
+    "linkCopied": "Lien copié !",
+    "roleUpdated": "Rôle mis à jour.",
+    "memberRemoved": "Membre retiré."
+  },
+  "settings": {
+    "title": "Paramètres",
+    "theme": "Thème",
+    "language": "Langue",
+    "themes": {
+      "light": "Clair",
+      "dark": "Sombre",
+      "auto": "Système"
+    }
+  },
+  "list": {
+    "create": "Nouvelle liste",
+    "delete": "Supprimer la liste",
+    "leave": "Quitter la liste",
+    "shareLink": "Lien de partage",
+    "myLists": "Mes listes",
+    "createPrompt": "Nom de la nouvelle liste :",
+    "selectOrCreate": "Sélectionnez ou créez une liste pour commencer.",
+    "noMembers": "Aucun membre. Partagez le lien d'invitation pour collaborer.",
+    "defaultRole": "Rôle par défaut :",
+    "revokeLink": "Révoquer le lien",
+    "generateLink": "Générer un lien",
+    "dangerZone": "Zone dangereuse",
+    "you": "(vous)",
+    "confirmDelete": "Supprimer définitivement la liste \"{{name}}\" et toutes ses tâches ?",
+    "confirmLeave": "Quitter la liste \"{{name}}\" ?",
+    "confirmRemoveMember": "Retirer {{name}} de la liste ?",
+    "nameLabel": "Nom de la liste",
+    "namePlaceholder": "Ex : Projet perso",
+    "colorLabel": "Couleur",
+    "descriptionLabel": "Description (optionnelle)",
+    "descriptionPlaceholder": "Décrivez l'objectif de cette liste...",
+    "roles": {
+      "owner": "Propriétaire",
+      "editor": "Éditeur",
+      "reader": "Lecteur"
+    },
+    "inviteRole": {
+      "editor": "Éditeur (peut modifier)",
+      "reader": "Lecteur (lecture seule)"
+    },
+    "members": "Membres",
+    "noLists": "Aucune liste. Créez-en une !"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Aucune notification.",
+    "types": {
+      "INVITE": "📨 Invitation à une liste",
+      "TASK_ASSIGNED": "✅ Tâche assignée",
+      "TASK_UPDATED": "✏️ Tâche mise à jour",
+      "MEMBER_JOINED": "👋 Nouveau membre",
+      "MEMBER_LEFT": "👋 Membre parti"
+    }
+  },
+  "profile": {
+    "title": "Mon profil",
+    "avatar": "Photo de profil",
+    "removeAvatar": "Supprimer la photo",
+    "info": "Informations",
+    "bioOptional": "Bio (optionnelle)",
+    "bioPlaceholder": "Quelques mots sur vous...",
+    "updatePassword": "Mettre à jour",
+    "bio": "Bio",
+    "changePassword": "Changer le mot de passe",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe"
+  },
+  "validation": {
+    "required": "Requis",
+    "min2chars": "Min. 2 caractères",
+    "min8chars": "Min. 8 caractères"
+  },
+  "admin": {
+    "subtitle": "Gestion globale de l'application",
+    "tabStats": "Statistiques",
+    "tabUsers": "Utilisateurs",
+    "tabLogs": "Journaux",
+    "totalUsers": "Utilisateurs",
+    "totalTasks": "Tâches",
+    "totalLists": "Listes",
+    "admins": "Administrateurs",
+    "last7days": "cette semaine",
+    "shared": "partagées",
+    "taskDistribution": "Répartition des tâches",
+    "taskBreakdown": "Détail tâches",
+    "logsByLevel": "Logs par niveau",
+    "user": "Utilisateur",
+    "role": "Rôle",
+    "makeAdmin": "Promouvoir administrateur",
+    "removeAdmin": "Rétrograder",
+    "roleGranted": "Rôle administrateur accordé.",
+    "roleRemoved": "Rôle administrateur retiré.",
+    "confirmDeleteUser": "Supprimer définitivement l'utilisateur {{name}} ?",
+    "clearLogs": "Vider les logs",
+    "confirmClearLogs": "Supprimer tous les logs ? Cette action est irréversible.",
+    "logsCleared": "Logs supprimés.",
+    "noLogs": "Aucun log pour le moment."
+  }
+}

@@ -1,0 +1,38 @@
+services:
+    _defaults:
+        autowire:      true
+        autoconfigure: true
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Enum/'
+            - '../src/Kernel.php'
+
+    # ─── Interfaces → implémentations ─────────────────────────────────────────
+    App\Interface\TaskServiceInterface:
+        alias: App\Service\TaskService
+
+    App\Interface\TaskRepositoryInterface:
+        alias: App\Repository\TaskRepository
+
+    App\Interface\TaskListServiceInterface:
+        alias: App\Service\TaskListService
+
+    App\Interface\AuthServiceInterface:
+        alias: App\Service\AuthService
+
+    # ─── AppLogger ────────────────────────────────────────────────────────────
+    # Injecté via #[Autowire] dans la classe — pas besoin de config ici
+
+    # ─── Cache ────────────────────────────────────────────────────────────────
+    App\Service\TaskCacheService:
+        arguments:
+            $taskCachePool: '@task.cache_pool'
+
+    # ─── Sanitizer ───────────────────────────────────────────────────────────
+    App\Service\SanitizationService:
+        arguments:
+            $htmlSanitizer: '@html_sanitizer.sanitizer.default'

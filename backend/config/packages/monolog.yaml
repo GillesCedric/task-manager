@@ -1,0 +1,45 @@
+monolog:
+    channels: ["audit", "security"]
+
+when@dev:
+    monolog:
+        handlers:
+            audit_handler:
+                type:     stream
+                path:     "%kernel.logs_dir%/audit.json.log"
+                level:    info
+                channels: ["audit"]
+                formatter: monolog.formatter.json
+
+            security_handler:
+                type:     stream
+                path:     "%kernel.logs_dir%/security.json.log"
+                level:    warning
+                channels: ["security"]
+                formatter: monolog.formatter.json
+
+            console:
+                type: console
+                process_psr_3_messages: false
+                channels: ["!event", "!doctrine"]
+
+when@prod:
+    monolog:
+        handlers:
+            audit_handler:
+                type:      stream
+                path:      "php://stdout"
+                level:     info
+                channels:  ["audit"]
+                formatter: monolog.formatter.json
+
+            system_handler:
+                type:         fingers_crossed
+                action_level: error
+                handler:      system_nested
+
+            system_nested:
+                type:      stream
+                path:      "%kernel.logs_dir%/app.json.log"
+                level:     info
+                formatter: monolog.formatter.json

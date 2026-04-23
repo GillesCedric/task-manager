@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ─── Scrollbar ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+.dark ::-webkit-scrollbar-thumb { background: #475569; }
+
+/* ─── Transition thème ─────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+/* ─── Keyframes ────────────────────────────────────────────────────────────── */
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes bar-grow {
+  from { width: 0%; }
+}
+
+@keyframes stroke-draw {
+  from { stroke-dashoffset: var(--stroke-total, 300); }
+}
+
+@keyframes bell-shake {
+  0%, 100% { transform: rotate(0deg); }
+  20%       { transform: rotate(-12deg); }
+  40%       { transform: rotate(12deg); }
+  60%       { transform: rotate(-8deg); }
+  80%       { transform: rotate(8deg); }
+}
+
+@keyframes bounce-dot {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.35); }
+}
+
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(6px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(0)  scale(1); }
+}
+
+/* ─── Classes d'animation ──────────────────────────────────────────────────── */
+
+.animate-fade-in-up   { animation: fade-in-up   0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-in      { animation: fade-in       0.2s ease both; }
+.animate-scale-in     { animation: scale-in      0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-slide-right  { animation: slide-in-right 0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-slide-left   { animation: slide-in-left  0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-bar-grow     { animation: bar-grow       0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-stroke-draw  { animation: stroke-draw    0.9s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-bell-shake   { animation: bell-shake     0.5s ease both; }
+.animate-bounce-dot   { animation: bounce-dot     0.4s ease both; }
+.animate-count-up     { animation: count-up       0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Délai via variable CSS — permet le stagger sans JS */
+.animation-delay-1  { animation-delay: calc(var(--stagger, 60ms) * 1); }
+.animation-delay-2  { animation-delay: calc(var(--stagger, 60ms) * 2); }
+.animation-delay-3  { animation-delay: calc(var(--stagger, 60ms) * 3); }
+.animation-delay-4  { animation-delay: calc(var(--stagger, 60ms) * 4); }
+.animation-delay-5  { animation-delay: calc(var(--stagger, 60ms) * 5); }
+.animation-delay-6  { animation-delay: calc(var(--stagger, 60ms) * 6); }
+.animation-delay-7  { animation-delay: calc(var(--stagger, 60ms) * 7); }
+.animation-delay-8  { animation-delay: calc(var(--stagger, 60ms) * 8); }
+
+/* Respect des préférences d'accessibilité */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after,
+  .animate-fade-in-up, .animate-fade-in, .animate-scale-in,
+  .animate-slide-right, .animate-slide-left, .animate-bar-grow,
+  .animate-stroke-draw, .animate-bell-shake, .animate-bounce-dot,
+  .animate-count-up {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─── DnD drop zone ─────────────────────────────────────────────────────────── */
+.drop-zone-active {
+  outline: 2px dashed #3b82f6;
+  outline-offset: 2px;
+}

@@ -1,0 +1,220 @@
+{
+  "app": {
+    "name": "Task Manager",
+    "tagline": "Manage your tasks efficiently"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "tasks": "My Tasks",
+    "logout": "Logout",
+    "admin": "Administration"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Sign Up",
+    "email": "Email address",
+    "password": "Password",
+    "name": "Full name",
+    "loginButton": "Sign in",
+    "registerButton": "Create account",
+    "noAccount": "No account yet?",
+    "hasAccount": "Already have an account?",
+    "passwordHint": "Min. 8 chars, 1 uppercase, 1 digit"
+  },
+  "task": {
+    "title": "Title",
+    "description": "Description",
+    "dueDate": "Due date",
+    "createdAt": "Created",
+    "updatedAt": "Updated",
+    "overdue": "Overdue",
+    "noDueDate": "No due date",
+    "noDescription": "No description.",
+    "titlePlaceholder": "E.g. Implement authentication",
+    "descriptionPlaceholder": "Detailed description...",
+    "assignee": "Assigned to",
+    "unassigned": "— Unassigned —",
+    "drag": "Move",
+    "taskCount_one": "{{count}} task",
+    "taskCount_other": "{{count}} tasks",
+    "status": {
+      "status": "Status",
+      "todo": "To do",
+      "in_progress": "In progress",
+      "done": "Done"
+    },
+    "priority": {
+      "priority": "Priority",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent"
+    }
+  },
+  "actions": {
+    "create": "New task",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "refresh": "Refresh",
+    "search": "Search...",
+    "update": "Update"
+  },
+  "filters": {
+    "all": "All",
+    "status": "Status",
+    "priority": "Priority",
+    "sort": "Sort by",
+    "order": {
+      "ASC": "Ascending",
+      "DESC": "Descending"
+    },
+    "sorts": {
+      "createdAt": "Created date",
+      "updatedAt": "Last modified",
+      "dueDate": "Due date",
+      "priority": "Priority",
+      "title": "Title"
+    }
+  },
+  "pagination": {
+    "showing": "{{from}} - {{to}} of {{total}}",
+    "previous": "Previous",
+    "next": "Next",
+    "perPage": "Per page"
+  },
+  "stats": {
+    "title": "Dashboard",
+    "total": "Total",
+    "todo": "To do",
+    "inProgress": "In progress",
+    "done": "Done",
+    "overdue": "Overdue",
+    "urgent": "Urgent",
+    "completion": "Completion rate"
+  },
+  "messages": {
+    "taskCreated": "Task created successfully!",
+    "taskUpdated": "Task updated!",
+    "taskDeleted": "Task deleted.",
+    "confirmDelete": "Permanently delete this task?",
+    "noTasks": "No tasks yet.",
+    "noTasksFiltered": "No tasks match the current filters.",
+    "loading": "Loading...",
+    "error": "An error occurred.",
+    "networkError": "Cannot reach the server.",
+    "profileUpdated": "Profile updated!",
+    "avatarTooLarge": "Image too large (max 1 MB)",
+    "avatarUpdated": "Photo updated!",
+    "avatarRemoved": "Photo removed.",
+    "passwordUpdated": "Password updated!",
+    "listDeleted": "List deleted.",
+    "listLeft": "You have left the list.",
+    "inviteLinkGenerated": "Link generated!",
+    "inviteLinkRevoked": "Link revoked.",
+    "linkCopied": "Link copied!",
+    "roleUpdated": "Role updated.",
+    "memberRemoved": "Member removed."
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": "Theme",
+    "language": "Language",
+    "themes": {
+      "light": "Light",
+      "dark": "Dark",
+      "auto": "System"
+    }
+  },
+  "list": {
+    "create": "New list",
+    "delete": "Delete list",
+    "leave": "Leave list",
+    "shareLink": "Share link",
+    "myLists": "My lists",
+    "createPrompt": "New list name:",
+    "selectOrCreate": "Select or create a list to get started.",
+    "noMembers": "No members yet. Share the invite link to collaborate.",
+    "defaultRole": "Default role:",
+    "revokeLink": "Revoke link",
+    "generateLink": "Generate link",
+    "dangerZone": "Danger zone",
+    "you": "(you)",
+    "confirmDelete": "Permanently delete list \"{{name}}\" and all its tasks?",
+    "confirmLeave": "Leave list \"{{name}}\"?",
+    "confirmRemoveMember": "Remove {{name}} from the list?",
+    "nameLabel": "List name",
+    "namePlaceholder": "E.g. Personal project",
+    "colorLabel": "Color",
+    "descriptionLabel": "Description (optional)",
+    "descriptionPlaceholder": "Describe the goal of this list...",
+    "roles": {
+      "owner": "Owner",
+      "editor": "Editor",
+      "reader": "Reader"
+    },
+    "inviteRole": {
+      "editor": "Editor (can edit)",
+      "reader": "Reader (read only)"
+    },
+    "members": "Members",
+    "noLists": "No lists yet. Create one!"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications.",
+    "types": {
+      "INVITE": "📨 List invitation",
+      "TASK_ASSIGNED": "✅ Task assigned",
+      "TASK_UPDATED": "✏️ Task updated",
+      "MEMBER_JOINED": "👋 New member",
+      "MEMBER_LEFT": "👋 Member left"
+    }
+  },
+  "profile": {
+    "title": "My profile",
+    "avatar": "Profile picture",
+    "removeAvatar": "Remove photo",
+    "info": "Information",
+    "bioOptional": "Bio (optional)",
+    "bioPlaceholder": "A few words about you...",
+    "updatePassword": "Update",
+    "bio": "Bio",
+    "changePassword": "Change password",
+    "currentPassword": "Current password",
+    "newPassword": "New password"
+  },
+  "validation": {
+    "required": "Required",
+    "min2chars": "Min. 2 characters",
+    "min8chars": "Min. 8 characters"
+  },
+  "admin": {
+    "subtitle": "Global application management",
+    "tabStats": "Statistics",
+    "tabUsers": "Users",
+    "tabLogs": "Logs",
+    "totalUsers": "Users",
+    "totalTasks": "Tasks",
+    "totalLists": "Lists",
+    "admins": "Administrators",
+    "last7days": "this week",
+    "shared": "shared",
+    "taskDistribution": "Task distribution",
+    "taskBreakdown": "Task breakdown",
+    "logsByLevel": "Logs by level",
+    "user": "User",
+    "role": "Role",
+    "makeAdmin": "Grant admin",
+    "removeAdmin": "Revoke admin",
+    "roleGranted": "Admin role granted.",
+    "roleRemoved": "Admin role removed.",
+    "confirmDeleteUser": "Permanently delete user {{name}}?",
+    "clearLogs": "Clear logs",
+    "confirmClearLogs": "Delete all logs? This action cannot be undone.",
+    "logsCleared": "Logs cleared.",
+    "noLogs": "No logs yet."
+  }
+}

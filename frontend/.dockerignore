@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.git
+.gitignore
+.claude/
+docs/
+coverage/
+*.md
+.env.local
+.env.*.local
+typedoc.json
+serve-docs.js

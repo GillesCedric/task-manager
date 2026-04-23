@@ -1,0 +1,18 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src"],
+  "entryPointStrategy": "expand",
+  "out": "docs/frontend",
+  "name": "Task Manager — Frontend Documentation",
+  "readme": "README.md",
+  "includeVersion": true,
+  "categorizeByGroup": true,
+  "searchInComments": true,
+  "tsconfig": "tsconfig.json",
+  "excludePrivate": false,
+  "excludeInternal": false,
+  "excludeNotDocumented": false,
+  "githubPages": false,
+  "hideGenerator": false,
+  "theme": "default"
+}
