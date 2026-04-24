@@ -537,12 +537,13 @@ jobs:
           RESULT=$(curl -sf -X POST "https://backboard.railway.app/graphql/v2" \
             -H "Authorization: Bearer $RAILWAY_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{\"query\": \"mutation { serviceInstanceRedeploy(serviceId: \\\"$BACKEND_SVC_ID\\\", environmentId: \\\"$STAGING_ENV_ID\\\") }\"}")
+            -d "{\"query\": \"mutation { environmentTriggersDeploy(input: { environmentId: \\\"$STAGING_ENV_ID\\\", projectId: \\\"$PROJECT_ID\\\", serviceId: \\\"$BACKEND_SVC_ID\\\" }) }\"}")
           echo "Backend deploy result: $RESULT"
-          echo "$RESULT" | grep -q '"serviceInstanceRedeploy":true' \
+          echo "$RESULT" | grep -q '"environmentTriggersDeploy":true' \
             || (echo "::error::Backend staging deploy failed: $RESULT" && exit 1)
         env:
           RAILWAY_TOKEN:    ${{ secrets.RAILWAY_TOKEN }}
+          PROJECT_ID:       ${{ vars.RAILWAY_PROJECT_ID }}
           BACKEND_SVC_ID:   ${{ vars.RAILWAY_BACKEND_SVC_ID }}
           STAGING_ENV_ID:   ${{ vars.RAILWAY_STAGING_ENV_ID }}
 
@@ -551,12 +552,13 @@ jobs:
           RESULT=$(curl -sf -X POST "https://backboard.railway.app/graphql/v2" \
             -H "Authorization: Bearer $RAILWAY_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{\"query\": \"mutation { serviceInstanceRedeploy(serviceId: \\\"$FRONTEND_SVC_ID\\\", environmentId: \\\"$STAGING_ENV_ID\\\") }\"}")
+            -d "{\"query\": \"mutation { environmentTriggersDeploy(input: { environmentId: \\\"$STAGING_ENV_ID\\\", projectId: \\\"$PROJECT_ID\\\", serviceId: \\\"$FRONTEND_SVC_ID\\\" }) }\"}")
           echo "Frontend deploy result: $RESULT"
-          echo "$RESULT" | grep -q '"serviceInstanceRedeploy":true' \
+          echo "$RESULT" | grep -q '"environmentTriggersDeploy":true' \
             || (echo "::error::Frontend staging deploy failed: $RESULT" && exit 1)
         env:
           RAILWAY_TOKEN:    ${{ secrets.RAILWAY_TOKEN }}
+          PROJECT_ID:       ${{ vars.RAILWAY_PROJECT_ID }}
           FRONTEND_SVC_ID:  ${{ vars.RAILWAY_FRONTEND_SVC_ID }}
           STAGING_ENV_ID:   ${{ vars.RAILWAY_STAGING_ENV_ID }}
 
@@ -629,12 +631,13 @@ jobs:
           RESULT=$(curl -sf -X POST "https://backboard.railway.app/graphql/v2" \
             -H "Authorization: Bearer $RAILWAY_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{\"query\": \"mutation { serviceInstanceRedeploy(serviceId: \\\"$BACKEND_SVC_ID\\\", environmentId: \\\"$PROD_ENV_ID\\\") }\"}")
+            -d "{\"query\": \"mutation { environmentTriggersDeploy(input: { environmentId: \\\"$PROD_ENV_ID\\\", projectId: \\\"$PROJECT_ID\\\", serviceId: \\\"$BACKEND_SVC_ID\\\" }) }\"}")
           echo "Backend deploy result: $RESULT"
-          echo "$RESULT" | grep -q '"serviceInstanceRedeploy":true' \
+          echo "$RESULT" | grep -q '"environmentTriggersDeploy":true' \
             || (echo "::error::Backend production deploy failed: $RESULT" && exit 1)
         env:
           RAILWAY_TOKEN:   ${{ secrets.RAILWAY_TOKEN }}
+          PROJECT_ID:      ${{ vars.RAILWAY_PROJECT_ID }}
           BACKEND_SVC_ID:  ${{ vars.RAILWAY_BACKEND_SVC_ID }}
           PROD_ENV_ID:     ${{ vars.RAILWAY_PROD_ENV_ID }}
 
@@ -643,12 +646,13 @@ jobs:
           RESULT=$(curl -sf -X POST "https://backboard.railway.app/graphql/v2" \
             -H "Authorization: Bearer $RAILWAY_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{\"query\": \"mutation { serviceInstanceRedeploy(serviceId: \\\"$FRONTEND_SVC_ID\\\", environmentId: \\\"$PROD_ENV_ID\\\") }\"}")
+            -d "{\"query\": \"mutation { environmentTriggersDeploy(input: { environmentId: \\\"$PROD_ENV_ID\\\", projectId: \\\"$PROJECT_ID\\\", serviceId: \\\"$FRONTEND_SVC_ID\\\" }) }\"}")
           echo "Frontend deploy result: $RESULT"
-          echo "$RESULT" | grep -q '"serviceInstanceRedeploy":true' \
+          echo "$RESULT" | grep -q '"environmentTriggersDeploy":true' \
             || (echo "::error::Frontend production deploy failed: $RESULT" && exit 1)
         env:
           RAILWAY_TOKEN:    ${{ secrets.RAILWAY_TOKEN }}
+          PROJECT_ID:       ${{ vars.RAILWAY_PROJECT_ID }}
           FRONTEND_SVC_ID:  ${{ vars.RAILWAY_FRONTEND_SVC_ID }}
           PROD_ENV_ID:      ${{ vars.RAILWAY_PROD_ENV_ID }}
 
