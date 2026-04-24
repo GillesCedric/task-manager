@@ -37,21 +37,24 @@ LABEL org.opencontainers.image.source="https://github.com/${GITHUB_REPOSITORY}"
 RUN apk add --no-cache \
         nginx=~1 \
         supervisor=~4 \
-        # runtime libs must stay after we delete -dev packages
+        # runtime libs — must survive after -dev packages are removed
         libzip \
         icu-libs \
         libpng \
-        # dev packages needed only at build time for ext compilation
+        # build-time only
         libzip-dev \
         icu-dev \
         libpng-dev \
+        ${PHPIZE_DEPS} \
     && docker-php-ext-install -j$(nproc) \
         pdo_mysql \
         zip \
         intl \
         opcache \
-    && apk del libzip-dev icu-dev libpng-dev \
-    && rm -rf /var/cache/apk/* /tmp/* /var/tmp/*
+    && pecl install apcu \
+    && docker-php-ext-enable apcu \
+    && apk del libzip-dev icu-dev libpng-dev ${PHPIZE_DEPS} \
+    && rm -rf /var/cache/apk/* /tmp/* /var/tmp/* /usr/local/lib/php/doc/*
 
 # ─── Security hardening ───────────────────────────────────────────────────────
 # Non-root user for PHP-FPM
