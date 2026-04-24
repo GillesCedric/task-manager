@@ -1,0 +1,18 @@
+title = "Task Manager Gitleaks Config"
+
+[allowlist]
+  description = "Allowlisted paths and commits"
+
+  # Symfony .env files contain dev/test placeholder values, not real secrets.
+  # Real secrets are injected at runtime via Railway environment variables.
+  paths = [
+    '''backend/\.env''',
+    '''backend/\.env\.dev''',
+    '''backend/\.env\.test''',
+    '''backend/\.env\.example''',
+  ]
+
+  # Initial commit contained placeholder JWT_PASSPHRASE in .env
+  commits = [
+    "ad3cb1655fe210d21cfea192dc4a82b711763593",
+  ]
