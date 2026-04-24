@@ -23,7 +23,7 @@ env:
   # which cosign and some OCI tools reject. Hardcoding lowercase here.
   IMAGE_BACKEND:    ghcr.io/gillescedric/task-manager-backend
   IMAGE_FRONTEND:   ghcr.io/gillescedric/task-manager-frontend
-  PHP_VERSION:      '8.2'
+  PHP_VERSION:      '8.4'
   NODE_VERSION:     '22'
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -532,35 +532,19 @@ jobs:
       url: ${{ vars.STAGING_URL }}
 
     steps:
-      - name: Deploy backend → staging (Railway API)
-        run: |
-          RESULT=$(curl -sf -X POST "https://backboard.railway.app/graphql/v2" \
-            -H "Authorization: Bearer $RAILWAY_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "{\"query\": \"mutation { environmentTriggersDeploy(input: { environmentId: \\\"$STAGING_ENV_ID\\\", projectId: \\\"$PROJECT_ID\\\", serviceId: \\\"$BACKEND_SVC_ID\\\" }) }\"}")
-          echo "Backend deploy result: $RESULT"
-          echo "$RESULT" | grep -q '"environmentTriggersDeploy":true' \
-            || (echo "::error::Backend staging deploy failed: $RESULT" && exit 1)
-        env:
-          RAILWAY_TOKEN:    ${{ secrets.RAILWAY_TOKEN }}
-          PROJECT_ID:       ${{ vars.RAILWAY_PROJECT_ID }}
-          BACKEND_SVC_ID:   ${{ vars.RAILWAY_BACKEND_SVC_ID }}
-          STAGING_ENV_ID:   ${{ vars.RAILWAY_STAGING_ENV_ID }}
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli@latest
 
-      - name: Deploy frontend → staging (Railway API)
-        run: |
-          RESULT=$(curl -sf -X POST "https://backboard.railway.app/graphql/v2" \
-            -H "Authorization: Bearer $RAILWAY_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "{\"query\": \"mutation { environmentTriggersDeploy(input: { environmentId: \\\"$STAGING_ENV_ID\\\", projectId: \\\"$PROJECT_ID\\\", serviceId: \\\"$FRONTEND_SVC_ID\\\" }) }\"}")
-          echo "Frontend deploy result: $RESULT"
-          echo "$RESULT" | grep -q '"environmentTriggersDeploy":true' \
-            || (echo "::error::Frontend staging deploy failed: $RESULT" && exit 1)
+      - name: Deploy backend → staging
+        # Project token is scoped to staging env — no --environment flag needed
+        run: railway redeploy --service backend --yes
         env:
-          RAILWAY_TOKEN:    ${{ secrets.RAILWAY_TOKEN }}
-          PROJECT_ID:       ${{ vars.RAILWAY_PROJECT_ID }}
-          FRONTEND_SVC_ID:  ${{ vars.RAILWAY_FRONTEND_SVC_ID }}
-          STAGING_ENV_ID:   ${{ vars.RAILWAY_STAGING_ENV_ID }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_STAGING }}
+
+      - name: Deploy frontend → staging
+        run: railway redeploy --service frontend --yes
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_STAGING }}
 
       - name: Wait for staging to be healthy
         run: |
@@ -626,35 +610,19 @@ jobs:
       url: ${{ vars.PRODUCTION_URL }}
 
     steps:
-      - name: Deploy backend → production (Railway API)
-        run: |
-          RESULT=$(curl -sf -X POST "https://backboard.railway.app/graphql/v2" \
-            -H "Authorization: Bearer $RAILWAY_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "{\"query\": \"mutation { environmentTriggersDeploy(input: { environmentId: \\\"$PROD_ENV_ID\\\", projectId: \\\"$PROJECT_ID\\\", serviceId: \\\"$BACKEND_SVC_ID\\\" }) }\"}")
-          echo "Backend deploy result: $RESULT"
-          echo "$RESULT" | grep -q '"environmentTriggersDeploy":true' \
-            || (echo "::error::Backend production deploy failed: $RESULT" && exit 1)
-        env:
-          RAILWAY_TOKEN:   ${{ secrets.RAILWAY_TOKEN }}
-          PROJECT_ID:      ${{ vars.RAILWAY_PROJECT_ID }}
-          BACKEND_SVC_ID:  ${{ vars.RAILWAY_BACKEND_SVC_ID }}
-          PROD_ENV_ID:     ${{ vars.RAILWAY_PROD_ENV_ID }}
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli@latest
 
-      - name: Deploy frontend → production (Railway API)
-        run: |
-          RESULT=$(curl -sf -X POST "https://backboard.railway.app/graphql/v2" \
-            -H "Authorization: Bearer $RAILWAY_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "{\"query\": \"mutation { environmentTriggersDeploy(input: { environmentId: \\\"$PROD_ENV_ID\\\", projectId: \\\"$PROJECT_ID\\\", serviceId: \\\"$FRONTEND_SVC_ID\\\" }) }\"}")
-          echo "Frontend deploy result: $RESULT"
-          echo "$RESULT" | grep -q '"environmentTriggersDeploy":true' \
-            || (echo "::error::Frontend production deploy failed: $RESULT" && exit 1)
+      - name: Deploy backend → production
+        # Project token is scoped to production env — no --environment flag needed
+        run: railway redeploy --service backend --yes
         env:
-          RAILWAY_TOKEN:    ${{ secrets.RAILWAY_TOKEN }}
-          PROJECT_ID:       ${{ vars.RAILWAY_PROJECT_ID }}
-          FRONTEND_SVC_ID:  ${{ vars.RAILWAY_FRONTEND_SVC_ID }}
-          PROD_ENV_ID:      ${{ vars.RAILWAY_PROD_ENV_ID }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PROD }}
+
+      - name: Deploy frontend → production
+        run: railway redeploy --service frontend --yes
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PROD }}
 
       - name: Verify production health
         run: |

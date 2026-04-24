@@ -27,7 +27,7 @@ RUN composer dump-autoload \
 # =============================================================================
 # Stage 2 — Runtime: PHP-FPM + Nginx in single container (supervisord)
 # =============================================================================
-FROM php:8.2-fpm-alpine AS runtime
+FROM php:8.4-fpm-alpine AS runtime
 
 LABEL org.opencontainers.image.title="task-manager-backend"
 LABEL org.opencontainers.image.description="Symfony 7.4 REST API"
@@ -37,6 +37,11 @@ LABEL org.opencontainers.image.source="https://github.com/${GITHUB_REPOSITORY}"
 RUN apk add --no-cache \
         nginx=~1 \
         supervisor=~4 \
+        # runtime libs must stay after we delete -dev packages
+        libzip \
+        icu-libs \
+        libpng \
+        # dev packages needed only at build time for ext compilation
         libzip-dev \
         icu-dev \
         libpng-dev \
