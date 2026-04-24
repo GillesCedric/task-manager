@@ -3,6 +3,7 @@ name: 🚀 DevSecOps Pipeline
 on:
   push:
     branches: [main, develop]
+    tags: ['v*.*.*']
   pull_request:
     branches: [main, develop]
   workflow_dispatch:
@@ -17,14 +18,14 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_BACKEND:  ghcr.io/${{ github.repository_owner }}/task-manager-backend
-  IMAGE_FRONTEND: ghcr.io/${{ github.repository_owner }}/task-manager-frontend
-  PHP_VERSION: '8.2'
-  NODE_VERSION: '22'
+  REGISTRY:         ghcr.io
+  IMAGE_BACKEND:    ghcr.io/${{ github.repository_owner }}/task-manager-backend
+  IMAGE_FRONTEND:   ghcr.io/${{ github.repository_owner }}/task-manager-frontend
+  PHP_VERSION:      '8.2'
+  NODE_VERSION:     '22'
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# JOB 1 — Secret Scanning (runs first, fail fast on exposed secrets)
+# JOB 1 — Secret Scanning (fail fast on exposed secrets)
 # ═══════════════════════════════════════════════════════════════════════════════
 jobs:
   secret-scan:
@@ -35,7 +36,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: TruffleHog — Scan for secrets in git history
+      - name: TruffleHog — Scan git history for secrets
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
@@ -77,7 +78,7 @@ jobs:
           key: composer-${{ hashFiles('backend/composer.lock') }}
           restore-keys: composer-
 
-      - name: Install dependencies
+      - name: Install dependencies (prod, no scripts)
         run: composer install --no-dev --no-scripts --prefer-dist --no-interaction --no-progress --ignore-platform-reqs
         env:
           APP_ENV: prod
@@ -106,7 +107,7 @@ jobs:
           || echo "::warning::PHPStan found issues — review manually"
         continue-on-error: true
 
-      - name: Semgrep — SAST PHP security rules
+      - name: Semgrep — SAST PHP/Symfony security rules
         uses: returntocorp/semgrep-action@v1
         with:
           config: >-
@@ -183,7 +184,7 @@ jobs:
           fi
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# JOB 4 — CodeQL Analysis (GitHub native SAST)
+# JOB 4 — CodeQL Analysis (GitHub native SAST — JS/TS)
 # ═══════════════════════════════════════════════════════════════════════════════
   codeql:
     name: 🔬 CodeQL Analysis
@@ -193,19 +194,13 @@ jobs:
       contents: read
       security-events: write
 
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [javascript-typescript]
-        # PHP CodeQL support requires enterprise — skip for now
-
     steps:
       - uses: actions/checkout@v4
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
-          languages: ${{ matrix.language }}
+          languages: javascript-typescript
           queries: security-extended,security-and-quality
 
       - name: Setup Node (for JS/TS analysis)
@@ -213,7 +208,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Build frontend (required for CodeQL)
+      - name: Build frontend (required for CodeQL graph)
         working-directory: frontend
         run: npm ci && npm run build
         env:
@@ -222,15 +217,19 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
         with:
-          category: "/language:${{ matrix.language }}"
+          category: "/language:javascript-typescript"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# JOB 5 — Backend Tests
+# JOB 5 — Backend Tests (with MySQL service)
 # ═══════════════════════════════════════════════════════════════════════════════
   test-backend:
     name: 🧪 Backend Tests
     runs-on: ubuntu-latest
     needs: [secret-scan, lint-backend]
+
+    permissions:
+      checks: write
+      contents: read
 
     services:
       mysql:
@@ -253,7 +252,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup PHP with coverage
+      - name: Setup PHP with Xdebug coverage
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ env.PHP_VERSION }}
@@ -261,7 +260,7 @@ jobs:
           coverage: xdebug
           tools: composer:v2
 
-      - name: Cache Composer deps
+      - name: Cache Composer deps (dev)
         uses: actions/cache@v4
         with:
           path: backend/vendor
@@ -271,22 +270,22 @@ jobs:
       - name: Install all dependencies (including dev)
         run: composer install --prefer-dist --no-interaction --no-progress --ignore-platform-reqs
 
-      - name: Create test database & run migrations
+      - name: Create test database and run migrations
         run: |
           php bin/console doctrine:database:create --env=test --no-interaction
           php bin/console doctrine:migrations:migrate --env=test --no-interaction
         env:
-          APP_ENV: test
+          APP_ENV:      test
           DATABASE_URL: "mysql://root:root@127.0.0.1:3306/task_manager_test?serverVersion=8.0&charset=utf8mb4"
 
-      - name: Run PHPUnit tests
+      - name: Run PHPUnit tests with coverage
         run: |
           php bin/phpunit \
             --coverage-clover coverage.xml \
             --log-junit phpunit-report.xml \
             --colors=always
         env:
-          APP_ENV: test
+          APP_ENV:      test
           DATABASE_URL: "mysql://root:root@127.0.0.1:3306/task_manager_test?serverVersion=8.0&charset=utf8mb4"
 
       - name: Upload coverage to Codecov
@@ -304,24 +303,34 @@ jobs:
           path: backend/phpunit-report.xml
           reporter: java-junit
           fail-on-error: false
+        continue-on-error: true
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# JOB 6 — Build Docker Images (parallel)
+# JOB 6 — Build Docker Images (parallel, multi-stage, GHCR push)
 # ═══════════════════════════════════════════════════════════════════════════════
   build-backend:
     name: 🐳 Build Backend Image
     runs-on: ubuntu-latest
     needs: [test-backend, lint-backend]
+
     outputs:
-      image: ${{ steps.meta.outputs.tags }}
-      digest: ${{ steps.build.outputs.digest }}
+      sha-tag: ${{ steps.sha.outputs.tag }}
+      digest:  ${{ steps.build.outputs.digest }}
 
     permissions:
       contents: read
       packages: write
+      id-token: write  # required for cosign OIDC signing
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Compute short SHA tag
+        id: sha
+        run: echo "tag=sha-$(echo '${{ github.sha }}' | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -345,39 +354,60 @@ jobs:
           tags: |
             type=ref,event=branch
             type=ref,event=pr
+            type=raw,value=sha-${{ github.sha && fromJSON('"' + github.sha + '"') }},enable=false
             type=sha,prefix=sha-,format=short
             type=semver,pattern={{version}}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+          labels: |
+            org.opencontainers.image.vendor=GillesCedric
+            org.opencontainers.image.licenses=MIT
 
       - name: Build and push backend image
         id: build
         uses: docker/build-push-action@v5
         with:
-          context: backend
-          file: backend/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          context:    backend
+          file:       backend/Dockerfile
+          push:       ${{ github.event_name != 'pull_request' }}
+          tags:       ${{ steps.meta.outputs.tags }}
+          labels:     ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=backend
           cache-to:   type=gha,scope=backend,mode=max
-          platforms: linux/amd64
+          platforms:  linux/amd64
+          provenance: true
+          sbom:       true
           build-args: |
             GITHUB_REPOSITORY=${{ github.repository }}
+
+      - name: Sign image with Cosign (keyless OIDC)
+        if: github.event_name != 'pull_request'
+        run: |
+          cosign sign --yes \
+            "${{ env.IMAGE_BACKEND }}@${{ steps.build.outputs.digest }}"
 
   build-frontend:
     name: 🐳 Build Frontend Image
     runs-on: ubuntu-latest
-    needs: [lint-frontend]
+    needs: [lint-frontend, codeql]
+
     outputs:
-      image: ${{ steps.meta.outputs.tags }}
-      digest: ${{ steps.build.outputs.digest }}
+      sha-tag: ${{ steps.sha.outputs.tag }}
+      digest:  ${{ steps.build.outputs.digest }}
 
     permissions:
       contents: read
       packages: write
+      id-token: write  # required for cosign OIDC signing
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Compute short SHA tag
+        id: sha
+        run: echo "tag=sha-$(echo '${{ github.sha }}' | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -400,25 +430,36 @@ jobs:
             type=sha,prefix=sha-,format=short
             type=semver,pattern={{version}}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+          labels: |
+            org.opencontainers.image.vendor=GillesCedric
+            org.opencontainers.image.licenses=MIT
 
       - name: Build and push frontend image
         id: build
         uses: docker/build-push-action@v5
         with:
-          context: frontend
-          file: frontend/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          context:    frontend
+          file:       frontend/Dockerfile
+          push:       ${{ github.event_name != 'pull_request' }}
+          tags:       ${{ steps.meta.outputs.tags }}
+          labels:     ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=frontend
           cache-to:   type=gha,scope=frontend,mode=max
-          platforms: linux/amd64
+          platforms:  linux/amd64
+          provenance: true
+          sbom:       true
           build-args: |
             VITE_API_URL=${{ vars.VITE_API_URL || 'https://api.task-manager.example.com' }}
             GITHUB_REPOSITORY=${{ github.repository }}
 
+      - name: Sign image with Cosign (keyless OIDC)
+        if: github.event_name != 'pull_request'
+        run: |
+          cosign sign --yes \
+            "${{ env.IMAGE_FRONTEND }}@${{ steps.build.outputs.digest }}"
+
 # ═══════════════════════════════════════════════════════════════════════════════
-# JOB 7 — Container Security Scanning (Trivy)
+# JOB 7 — Container Security Scanning (Trivy — CRITICAL + HIGH only)
 # ═══════════════════════════════════════════════════════════════════════════════
   scan-images:
     name: 🛡️ Container Security Scan
@@ -431,14 +472,19 @@ jobs:
       security-events: write
 
     strategy:
+      fail-fast: false
       matrix:
         include:
           - service: backend
-            image: ${{ needs.build-backend.outputs.image }}
+            image:   ${{ needs.build-backend.outputs.sha-tag }}
+            full:    ${{ needs.build-backend.outputs.sha-tag }}
           - service: frontend
-            image: ${{ needs.build-frontend.outputs.image }}
+            image:   ${{ needs.build-frontend.outputs.sha-tag }}
+            full:    ${{ needs.build-frontend.outputs.sha-tag }}
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -446,18 +492,27 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Resolve full image reference
+        id: img
+        run: |
+          if [ "${{ matrix.service }}" = "backend" ]; then
+            echo "ref=${{ env.IMAGE_BACKEND }}:${{ matrix.image }}" >> $GITHUB_OUTPUT
+          else
+            echo "ref=${{ env.IMAGE_FRONTEND }}:${{ matrix.image }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Trivy — Scan ${{ matrix.service }} image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref:    ${{ matrix.image }}
-          format:       sarif
-          output:       trivy-${{ matrix.service }}.sarif
-          severity:     CRITICAL,HIGH
-          exit-code:    1
+          image-ref:      ${{ steps.img.outputs.ref }}
+          format:         sarif
+          output:         trivy-${{ matrix.service }}.sarif
+          severity:       CRITICAL,HIGH
+          exit-code:      1
           ignore-unfixed: true
         continue-on-error: true
 
-      - name: Upload Trivy SARIF
+      - name: Upload Trivy SARIF to Security tab
         uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
@@ -465,7 +520,7 @@ jobs:
           category:   trivy-${{ matrix.service }}
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# JOB 8 — Deploy to Staging (main branch only)
+# JOB 8 — Deploy to Staging (main branch, auto)
 # ═══════════════════════════════════════════════════════════════════════════════
   deploy-staging:
     name: 🚀 Deploy — Staging
@@ -477,40 +532,42 @@ jobs:
       url: ${{ vars.STAGING_URL }}
 
     steps:
-      - uses: actions/checkout@v4
-
       - name: Install Railway CLI
         run: npm install -g @railway/cli@latest
 
       - name: Deploy backend to staging
+        # Railway service is configured to pull ghcr.io/.../backend:main
+        # railway redeploy triggers Railway to re-pull the latest pushed image
         run: |
-          railway deploy \
-            --service ${{ vars.RAILWAY_BACKEND_SERVICE_STAGING }} \
-            --image ${{ env.IMAGE_BACKEND }}:sha-${{ github.sha }} \
-            --detach
+          railway redeploy \
+            --service "${{ vars.RAILWAY_BACKEND_SERVICE_STAGING }}" \
+            --yes
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_STAGING }}
 
       - name: Deploy frontend to staging
         run: |
-          railway deploy \
-            --service ${{ vars.RAILWAY_FRONTEND_SERVICE_STAGING }} \
-            --image ${{ env.IMAGE_FRONTEND }}:sha-${{ github.sha }} \
-            --detach
+          railway redeploy \
+            --service "${{ vars.RAILWAY_FRONTEND_SERVICE_STAGING }}" \
+            --yes
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_STAGING }}
 
       - name: Wait for staging to be healthy
         run: |
-          echo "Waiting 30s for containers to start..."
-          sleep 30
-          curl --retry 5 --retry-delay 10 --retry-connrefused \
+          echo "Waiting 45s for containers to start..."
+          sleep 45
+          curl --retry 6 --retry-delay 10 --retry-all-errors \
             -f "${{ vars.STAGING_API_URL }}/api/health" \
             && echo "✓ Backend healthy" \
             || echo "::warning::Backend health check failed"
+          curl --retry 3 --retry-delay 5 --retry-all-errors \
+            -f "${{ vars.STAGING_URL }}/health.txt" \
+            && echo "✓ Frontend healthy" \
+            || echo "::warning::Frontend health check failed"
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# JOB 9 — DAST: OWASP ZAP (after staging deploy)
+# JOB 9 — DAST: OWASP ZAP (runs against staging after deploy)
 # ═══════════════════════════════════════════════════════════════════════════════
   dast-zap:
     name: 🎯 DAST — OWASP ZAP
@@ -528,70 +585,74 @@ jobs:
       - name: ZAP Baseline Scan — API
         uses: zaproxy/action-baseline@v0.12.0
         with:
-          target:      ${{ vars.STAGING_API_URL }}/api
+          target:          ${{ vars.STAGING_API_URL }}/api
           rules_file_name: .github/zap/api-rules.tsv
-          fail_action: false
-          artifact_name: zap-api-report
-          cmd_options:  '-a -j'
+          fail_action:     false
+          artifact_name:   zap-api-report
+          cmd_options:     '-a -j'
 
       - name: ZAP Baseline Scan — Frontend
         uses: zaproxy/action-baseline@v0.12.0
         with:
-          target:      ${{ vars.STAGING_URL }}
-          fail_action: false
+          target:        ${{ vars.STAGING_URL }}
+          fail_action:   false
           artifact_name: zap-frontend-report
-          cmd_options: '-a -j'
+          cmd_options:   '-a -j'
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# JOB 10 — Deploy to Production (main + manual gate)
+# JOB 10 — Deploy to Production (manual gate: workflow_dispatch OR tag push)
 # ═══════════════════════════════════════════════════════════════════════════════
   deploy-production:
     name: 🏭 Deploy — Production
     runs-on: ubuntu-latest
     needs: [dast-zap]
+    # Production deploys only on:
+    #   - explicit workflow_dispatch with deploy_prod=true
+    #   - semver tag push (v*.*.*)
     if: |
       github.ref == 'refs/heads/main' &&
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_prod == 'true' ||
-       github.event_name == 'push')
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.deploy_prod == 'true'
+      ||
+      startsWith(github.ref, 'refs/tags/v')
     environment:
       name: production
       url: ${{ vars.PRODUCTION_URL }}
 
     steps:
-      - uses: actions/checkout@v4
-
       - name: Install Railway CLI
         run: npm install -g @railway/cli@latest
 
       - name: Deploy backend to production
+        # Railway service configured to pull ghcr.io/.../backend:latest
         run: |
-          railway deploy \
-            --service ${{ vars.RAILWAY_BACKEND_SERVICE_PROD }} \
-            --image ${{ env.IMAGE_BACKEND }}:sha-${{ github.sha }} \
-            --detach
+          railway redeploy \
+            --service "${{ vars.RAILWAY_BACKEND_SERVICE_PROD }}" \
+            --yes
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PROD }}
 
       - name: Deploy frontend to production
         run: |
-          railway deploy \
-            --service ${{ vars.RAILWAY_FRONTEND_SERVICE_PROD }} \
-            --image ${{ env.IMAGE_FRONTEND }}:sha-${{ github.sha }} \
-            --detach
+          railway redeploy \
+            --service "${{ vars.RAILWAY_FRONTEND_SERVICE_PROD }}" \
+            --yes
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PROD }}
 
       - name: Verify production health
         run: |
-          sleep 45
-          curl --retry 5 --retry-delay 10 --retry-connrefused \
+          echo "Waiting 60s for production containers to start..."
+          sleep 60
+          curl --retry 6 --retry-delay 10 --retry-all-errors \
             -f "${{ vars.PRODUCTION_API_URL }}/api/health" \
             && echo "✓ Production backend healthy"
+          curl --retry 3 --retry-delay 5 --retry-all-errors \
+            -f "${{ vars.PRODUCTION_URL }}/health.txt" \
+            && echo "✓ Production frontend healthy"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           generate_release_notes: true
-          files: |
-            backend/CHANGELOG.md

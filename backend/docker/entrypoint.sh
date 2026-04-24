@@ -3,9 +3,9 @@ set -e
 
 echo "==> [entrypoint] Starting Task Manager API (env: ${APP_ENV:-prod})"
 
-# ─── JWT Keys: écrire les clés depuis les env vars ────────────────────────────
-# En production, JWT_SECRET_KEY_VALUE et JWT_PUBLIC_KEY_VALUE contiennent
-# le contenu PEM des clés. On les écrit dans les fichiers attendus par Symfony.
+# ─── JWT Keys: write keys from env vars ──────────────────────────────────────
+# In production, JWT_SECRET_KEY_VALUE and JWT_PUBLIC_KEY_VALUE hold the PEM
+# key content. Write them to the paths Symfony expects.
 mkdir -p config/jwt
 
 if [ -n "${JWT_SECRET_KEY_VALUE:-}" ]; then

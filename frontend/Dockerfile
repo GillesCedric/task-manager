@@ -5,11 +5,11 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# ARGs injectés par la pipeline CI pour pointer vers l'API backend
+# Injected by CI pipeline to point at the backend API
 ARG VITE_API_URL=https://api.task-manager.example.com
 ENV VITE_API_URL=$VITE_API_URL
 
-# Install deps — layer séparé pour cache optimal
+# Separate layer for optimal Docker cache reuse
 COPY package.json package-lock.json ./
 RUN npm ci --prefer-offline --no-audit
 
@@ -27,17 +27,17 @@ LABEL org.opencontainers.image.description="React 19 SPA — Task Manager"
 LABEL org.opencontainers.image.source="https://github.com/${GITHUB_REPOSITORY}"
 
 # ─── Security hardening ───────────────────────────────────────────────────────
-# Supprimer les modules nginx inutiles et les fichiers par défaut
+# Remove default nginx config and static files
 RUN rm -rf /etc/nginx/conf.d/default.conf \
     && rm -rf /usr/share/nginx/html/*
 
-# Non-root: nginx écoute sur 8080 (port non-privilégié)
+# Non-root: nginx listens on 8080 (unprivileged port)
 RUN sed -i 's|listen\s*80;|listen 8080;|g' /etc/nginx/nginx.conf 2>/dev/null || true
 
-# ─── Configuration nginx ──────────────────────────────────────────────────────
+# ─── Nginx configuration ──────────────────────────────────────────────────────
 COPY docker/nginx.conf /etc/nginx/conf.d/app.conf
 
-# ─── Assets statiques ────────────────────────────────────────────────────────
+# ─── Static assets ────────────────────────────────────────────────────────────
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # ─── Security: run as non-root ────────────────────────────────────────────────

@@ -2,7 +2,7 @@ name: 🔒 Scheduled Security Scans
 
 on:
   schedule:
-    # Tous les jours à 02h00 UTC
+    # Every day at 02:00 UTC
     - cron: '0 2 * * *'
   workflow_dispatch:
 
@@ -11,7 +11,7 @@ permissions:
   security-events: write
 
 jobs:
-  # ─── Scan GHCR images en production ─────────────────────────────────────────
+  # ─── Scan production GHCR images ────────────────────────────────────────────
   scan-production-images:
     name: Trivy — Production Images
     runs-on: ubuntu-latest
@@ -44,7 +44,7 @@ jobs:
         with:
           sarif_file: trivy.sarif
 
-  # ─── Dependency audit complet ────────────────────────────────────────────────
+  # ─── Full dependency audit ───────────────────────────────────────────────────
   audit-deps:
     name: Dependency Vulnerability Audit
     runs-on: ubuntu-latest
