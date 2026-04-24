@@ -520,17 +520,7 @@ jobs:
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # JOB 8 — Deploy to Staging (main branch, automatic)
-#
-# Railway setup required (once, in Railway dashboard):
-#   • Project: task-manager — environments: staging, production
-#   • Services: backend, frontend (Docker image source from GHCR)
-#   • backend staging  → image: ghcr.io/gillescedric/task-manager-backend:main
-#   • frontend staging → image: ghcr.io/gillescedric/task-manager-frontend:main
-#   • backend prod     → image: ghcr.io/gillescedric/task-manager-backend:latest
-#   • frontend prod    → image: ghcr.io/gillescedric/task-manager-frontend:latest
-#
-# GitHub secrets required: RAILWAY_TOKEN
-# GitHub vars required: STAGING_URL, STAGING_API_URL
+# Uses Railway GraphQL API directly — railway CLI redeploy has no --environment flag.
 # ═══════════════════════════════════════════════════════════════════════════════
   deploy-staging:
     name: 🚀 Deploy — Staging
@@ -542,31 +532,38 @@ jobs:
       url: ${{ vars.STAGING_URL }}
 
     steps:
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli@latest
-
-      - name: Deploy backend → staging
+      - name: Deploy backend → staging (Railway API)
         run: |
-          railway redeploy \
-            --service backend \
-            --environment staging \
-            --yes
+          RESULT=$(curl -sf -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\": \"mutation { serviceInstanceRedeploy(serviceId: \\\"$BACKEND_SVC_ID\\\", environmentId: \\\"$STAGING_ENV_ID\\\") }\"}")
+          echo "Backend deploy result: $RESULT"
+          echo "$RESULT" | grep -q '"serviceInstanceRedeploy":true' \
+            || (echo "::error::Backend staging deploy failed: $RESULT" && exit 1)
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_TOKEN:    ${{ secrets.RAILWAY_TOKEN }}
+          BACKEND_SVC_ID:   ${{ vars.RAILWAY_BACKEND_SVC_ID }}
+          STAGING_ENV_ID:   ${{ vars.RAILWAY_STAGING_ENV_ID }}
 
-      - name: Deploy frontend → staging
+      - name: Deploy frontend → staging (Railway API)
         run: |
-          railway redeploy \
-            --service frontend \
-            --environment staging \
-            --yes
+          RESULT=$(curl -sf -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\": \"mutation { serviceInstanceRedeploy(serviceId: \\\"$FRONTEND_SVC_ID\\\", environmentId: \\\"$STAGING_ENV_ID\\\") }\"}")
+          echo "Frontend deploy result: $RESULT"
+          echo "$RESULT" | grep -q '"serviceInstanceRedeploy":true' \
+            || (echo "::error::Frontend staging deploy failed: $RESULT" && exit 1)
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_TOKEN:    ${{ secrets.RAILWAY_TOKEN }}
+          FRONTEND_SVC_ID:  ${{ vars.RAILWAY_FRONTEND_SVC_ID }}
+          STAGING_ENV_ID:   ${{ vars.RAILWAY_STAGING_ENV_ID }}
 
       - name: Wait for staging to be healthy
         run: |
-          echo "Waiting 45s for containers to start..."
-          sleep 45
+          echo "Waiting 60s for containers to start..."
+          sleep 60
           curl --retry 6 --retry-delay 10 --retry-all-errors \
             -f "${{ vars.STAGING_API_URL }}/api/health" \
             && echo "✓ Backend healthy" \
@@ -627,26 +624,33 @@ jobs:
       url: ${{ vars.PRODUCTION_URL }}
 
     steps:
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli@latest
-
-      - name: Deploy backend → production
+      - name: Deploy backend → production (Railway API)
         run: |
-          railway redeploy \
-            --service backend \
-            --environment production \
-            --yes
+          RESULT=$(curl -sf -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\": \"mutation { serviceInstanceRedeploy(serviceId: \\\"$BACKEND_SVC_ID\\\", environmentId: \\\"$PROD_ENV_ID\\\") }\"}")
+          echo "Backend deploy result: $RESULT"
+          echo "$RESULT" | grep -q '"serviceInstanceRedeploy":true' \
+            || (echo "::error::Backend production deploy failed: $RESULT" && exit 1)
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_TOKEN:   ${{ secrets.RAILWAY_TOKEN }}
+          BACKEND_SVC_ID:  ${{ vars.RAILWAY_BACKEND_SVC_ID }}
+          PROD_ENV_ID:     ${{ vars.RAILWAY_PROD_ENV_ID }}
 
-      - name: Deploy frontend → production
+      - name: Deploy frontend → production (Railway API)
         run: |
-          railway redeploy \
-            --service frontend \
-            --environment production \
-            --yes
+          RESULT=$(curl -sf -X POST "https://backboard.railway.app/graphql/v2" \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\": \"mutation { serviceInstanceRedeploy(serviceId: \\\"$FRONTEND_SVC_ID\\\", environmentId: \\\"$PROD_ENV_ID\\\") }\"}")
+          echo "Frontend deploy result: $RESULT"
+          echo "$RESULT" | grep -q '"serviceInstanceRedeploy":true' \
+            || (echo "::error::Frontend production deploy failed: $RESULT" && exit 1)
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_TOKEN:    ${{ secrets.RAILWAY_TOKEN }}
+          FRONTEND_SVC_ID:  ${{ vars.RAILWAY_FRONTEND_SVC_ID }}
+          PROD_ENV_ID:      ${{ vars.RAILWAY_PROD_ENV_ID }}
 
       - name: Verify production health
         run: |
