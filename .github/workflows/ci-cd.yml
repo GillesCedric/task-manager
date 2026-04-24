@@ -19,8 +19,10 @@ concurrency:
 
 env:
   REGISTRY:         ghcr.io
-  IMAGE_BACKEND:    ghcr.io/${{ github.repository_owner }}/task-manager-backend
-  IMAGE_FRONTEND:   ghcr.io/${{ github.repository_owner }}/task-manager-frontend
+  # GHCR requires lowercase owner — github.repository_owner preserves original case (GillesCedric)
+  # which cosign and some OCI tools reject. Hardcoding lowercase here.
+  IMAGE_BACKEND:    ghcr.io/gillescedric/task-manager-backend
+  IMAGE_FRONTEND:   ghcr.io/gillescedric/task-manager-frontend
   PHP_VERSION:      '8.2'
   NODE_VERSION:     '22'
 
