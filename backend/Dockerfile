@@ -84,10 +84,12 @@ COPY --chown=app:app . .
 RUN mkdir -p var/cache var/log config/jwt \
     && chown -R app:app var/ config/jwt \
     && chmod -R 755 var/ \
-    # Nginx needs to write to /var/run and /var/log/nginx
-    && chown -R app:app /var/run/nginx /var/log/nginx 2>/dev/null || true \
-    && touch /var/run/nginx.pid \
-    && chown app:app /var/run/nginx.pid
+    # Nginx dirs — /var/lib/nginx/{logs,tmp} must be writable by non-root app user
+    && mkdir -p /var/lib/nginx/logs /var/lib/nginx/tmp \
+                /var/log/nginx /var/run/nginx \
+    && chown -R app:app /var/lib/nginx /var/log/nginx /var/run/nginx \
+    && touch /var/run/nginx.pid /tmp/nginx.pid \
+    && chown app:app /var/run/nginx.pid /tmp/nginx.pid
 
 # Entrypoint: warm cache, run migrations, start supervisord
 COPY --chown=app:app docker/entrypoint.sh /usr/local/bin/entrypoint.sh
